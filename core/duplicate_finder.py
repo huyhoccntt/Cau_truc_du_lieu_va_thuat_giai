@@ -13,11 +13,13 @@ def find_duplicates(root, progress=None, on_error=None, should_cancel=None):
 
     Quy trình: quét -> nhóm kích thước -> SHA-256 -> xác minh byte-for-byte.
     Mỗi nhóm kết quả gồm ít nhất hai đường dẫn có cùng nội dung đã xác minh.
+    Các callback cho phép giao diện theo dõi tiến độ, nhận lỗi và yêu cầu hủy.
     """
     started = time.perf_counter()
     all_files = []
     errors = []
     def report_error(message):
+        """Lưu lỗi để đưa vào thống kê, đồng thời báo cho giao diện nếu cần."""
         errors.append(message)
         if on_error:
             on_error(message)
@@ -30,6 +32,7 @@ def find_duplicates(root, progress=None, on_error=None, should_cancel=None):
     if should_cancel and should_cancel():
         return {"groups": [], "stats": _stats(started, all_files, [], errors, True)}
 
+    # So sánh kích thước trước để chỉ băm những file có khả năng trùng nhau.
     by_size = defaultdict(list)
     for record in all_files:
         by_size[record[1]].append(record)
@@ -85,6 +88,7 @@ def find_duplicates(root, progress=None, on_error=None, should_cancel=None):
 
 
 def _stats(started, all_files, candidates, errors, cancelled, hashed=0, table=None):
+    """Tạo thống kê quét và băm để giao diện hiển thị hoặc xuất báo cáo."""
     duplicate_files = 0
     return {
         "files_scanned": len(all_files),

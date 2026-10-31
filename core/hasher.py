@@ -3,6 +3,7 @@ import hashlib
 
 
 def calculate_sha256(path, chunk_size=1024 * 1024):
+    """Tính SHA-256 theo từng khối để giới hạn bộ nhớ sử dụng."""
     digest = hashlib.sha256()
     with open(path, "rb") as stream:
         while True:
@@ -14,9 +15,10 @@ def calculate_sha256(path, chunk_size=1024 * 1024):
 
 
 def files_equal(path_a, path_b, chunk_size=1024 * 1024):
-    """So sánh nội dung byte-for-byte theo khối."""
+    """So sánh kích thước rồi nội dung byte-for-byte theo từng khối."""
     try:
         import os
+        # File khác kích thước không thể có nội dung giống hệt nhau.
         if os.path.getsize(path_a) != os.path.getsize(path_b):
             return False
         with open(path_a, "rb") as a, open(path_b, "rb") as b:

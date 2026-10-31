@@ -6,8 +6,10 @@ def scan_files(root, on_error=None, should_cancel=None):
     """Yield (absolute_path, size_bytes, mtime_ns).
 
     Bỏ qua symlink tới thư mục để tránh chu trình; không theo symlink file.
+    Lỗi truy cập từng đường dẫn được chuyển cho on_error để quá trình tiếp tục.
     """
     def handle_error(exc):
+        """Chuẩn hóa lỗi quét thành chuỗi trước khi gửi cho bên gọi."""
         if on_error:
             on_error(str(exc))
 
@@ -25,6 +27,7 @@ def scan_files(root, on_error=None, should_cancel=None):
                 return
             path = os.path.abspath(os.path.join(current, name))
             try:
+                # Lấy thông tin file nhưng không theo symlink.
                 if os.path.islink(path) or not os.path.isfile(path):
                     continue
                 stat = os.stat(path, follow_symlinks=False)

@@ -1,3 +1,5 @@
+"""Kiểm thử việc tìm nhóm file giống nội dung và loại file chỉ cùng kích thước."""
+
 import os
 import tempfile
 import unittest
@@ -5,7 +7,10 @@ from core.duplicate_finder import find_duplicates
 
 
 class DuplicateFinderTests(unittest.TestCase):
+    """Các ca kiểm thử tích hợp cho quy trình tìm file trùng."""
+
     def test_finds_only_identical_content(self):
+        """Nhận diện file giống byte, gồm cả file rỗng, không chỉ cùng kích thước."""
         with tempfile.TemporaryDirectory() as root:
             a = os.path.join(root, "a.txt")
             b = os.path.join(root, "renamed.txt")

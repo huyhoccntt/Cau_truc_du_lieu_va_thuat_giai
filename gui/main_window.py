@@ -1,3 +1,5 @@
+"""Cửa sổ Tkinter để quét, xem và xuất kết quả file trùng lặp."""
+
 import csv
 import os
 import queue
@@ -9,6 +11,7 @@ from core.duplicate_finder import find_duplicates
 
 
 def human_size(value):
+    """Định dạng số byte theo đơn vị dễ đọc từ B đến TB."""
     amount = float(value)
     for unit in ("B", "KB", "MB", "GB", "TB"):
         if amount < 1024 or unit == "TB":
@@ -18,7 +21,10 @@ def human_size(value):
 
 
 class DuplicateFinderApp(tk.Tk):
+    """Cửa sổ chính; thực hiện quét nền và cập nhật giao diện an toàn."""
+
     def __init__(self):
+        """Khởi tạo trạng thái ứng dụng, giao diện và bộ nhận sự kiện."""
         super().__init__()
         self.title("Duplicate File Finder — SHA-256")
         self.geometry("1050x680")
@@ -32,6 +38,7 @@ class DuplicateFinderApp(tk.Tk):
         self.after(100, self._poll_events)
 
     def _build_ui(self):
+        """Tạo các trường chọn thư mục, nút lệnh, tiến trình và kết quả."""
         top = ttk.Frame(self, padding=12)
         top.pack(fill="x")
         ttk.Label(top, text="Thư mục cần quét:").grid(row=0, column=0, sticky="w")
@@ -73,11 +80,13 @@ class DuplicateFinderApp(tk.Tk):
         ttk.Label(self, textvariable=self.summary_var, padding=12).pack(fill="x")
 
     def _choose_folder(self):
+        """Mở hộp thoại để chọn thư mục cần kiểm tra."""
         folder = filedialog.askdirectory(title="Chọn thư mục cần quét")
         if folder:
             self.path_var.set(folder)
 
     def _start_scan(self):
+        """Kiểm tra đầu vào rồi khởi chạy tác vụ quét trong thread nền."""
         root = self.path_var.get().strip()
         if not root or not os.path.isdir(root):
             messagebox.showerror("Thư mục không hợp lệ", "Hãy chọn một thư mục tồn tại.")
@@ -98,9 +107,12 @@ class DuplicateFinderApp(tk.Tk):
         self.worker.start()
 
     def _run_scan(self, root):
+        """Chạy thuật toán tìm file trùng và gửi sự kiện về thread giao diện."""
         def progress(stage, current, total, path):
+            """Đưa tiến độ vào hàng đợi để thread Tkinter cập nhật."""
             self.events.put(("progress", stage, current, total, path))
         def on_error(message):
+            """Đưa lỗi quét vào hàng đợi mà không gọi Tkinter từ thread nền."""
             self.events.put(("error", message))
         try:
             result = find_duplicates(
@@ -114,10 +126,12 @@ class DuplicateFinderApp(tk.Tk):
             self.events.put(("fatal", str(exc)))
 
     def _cancel_scan(self):
+        """Gửi yêu cầu dừng; worker sẽ kiểm tra cờ hủy trong quá trình quét."""
         self.cancel_event.set()
         self.status_var.set("Đang yêu cầu dừng...")
 
     def _poll_events(self):
+        """Đọc hàng đợi định kỳ và xử lý cập nhật từ worker trên Tkinter."""
         try:
             while True:
                 event = self.events.get_nowait()
@@ -144,6 +158,7 @@ class DuplicateFinderApp(tk.Tk):
         self.after(100, self._poll_events)
 
     def _show_result(self, result):
+        """Hiển thị các nhóm trùng và tổng hợp thống kê sau khi quét."""
         self.groups = result["groups"]
         stats = result["stats"]
         # Tính thống kê từ nhóm đã xác minh.
@@ -178,10 +193,12 @@ class DuplicateFinderApp(tk.Tk):
             )
 
     def _finish_controls(self):
+        """Đưa các nút bắt đầu/hủy về trạng thái sẵn sàng."""
         self.start_btn.config(state="normal")
         self.cancel_btn.config(state="disabled")
 
     def _show_group(self, _event=None):
+        """Mở cửa sổ liệt kê đường dẫn và SHA-256 của nhóm được chọn."""
         selected = self.tree.selection()
         if not selected:
             return
@@ -197,6 +214,7 @@ class DuplicateFinderApp(tk.Tk):
             box.insert("end", path)
 
     def _open_selected_folder(self):
+        """Mở Explorer tại thư mục chứa file đại diện của nhóm đã chọn."""
         selected = self.tree.selection()
         if not selected:
             messagebox.showinfo("Chưa chọn", "Hãy chọn một nhóm kết quả trước.")
@@ -208,6 +226,7 @@ class DuplicateFinderApp(tk.Tk):
             messagebox.showerror("Không mở được thư mục", str(exc))
 
     def _export_csv(self):
+        """Ghi các nhóm file, thống kê và lỗi vào báo cáo CSV."""
         if self.last_stats is None:
             messagebox.showinfo("Chưa có kết quả", "Hãy quét thư mục trước.")
             return

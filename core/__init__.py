@@ -1,0 +1,1 @@
+"""Các thành phần xử lý quét, băm và tìm file trùng lặp."""
