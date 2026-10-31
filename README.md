@@ -9,7 +9,6 @@ Công cụ tìm tập tin trùng lặp trên Windows 10 bằng:
 - Giao diện Tkinter, tiến trình, thống kê và xuất CSV.
 
 ## Yêu cầu
-- Windows 10
 - Python 3.10 trở lên (khuyến nghị Python 3.11 hoặc 3.12)
 - Không cần cài thư viện ngoài.
 
